@@ -6,12 +6,10 @@
 # Author: Daiyuu Nobori
 # Description
 
-import subprocess
-
 from submodules.IPA_DN_PyNeko.v1.PyNeko import *
 
 
-res = EasyExec.ShellExecutePiped("sleep 5", ignoreError=True, timeoutSecs=1)
+res = EasyExec.ShellExecutePiped("sleep 5", ignoreError=True, timeoutSecs=6)
 
 print("code = " + str(res.ExitCode))
 
