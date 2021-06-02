@@ -10,3 +10,6 @@
 from submodules.IPA_DN_PyNeko.v1.PyNeko import *
 
 
+Util.ShellExecute("ls -la")
+
+
