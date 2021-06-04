@@ -2,6 +2,10 @@
 # All Rights Reserved.
 #
 # Author: Daiyuu Nobori
+# 
+# 2021/06/02 に生まれて初めて書いたインチキ Python スクリプト！！
+# 
+# 処理の内容
 # 1. Let's Encrypt のワイルドカード証明書の発行認証を行なうための TXT レコード応答用 Docker を Linux 上で立ち上げる。
 # 2. Let's Encrypt のワイルドカード証明書の発行認証を要求し、認証を成功させる。
 # 3. 発行された Let's Encrypt のワイルドカード証明書のファイルを整理し、指定したディレクトリに設置する。
@@ -14,12 +18,10 @@ from typing import List, Tuple, Dict, Set
 import typing
 from datetime import timedelta, tzinfo, timezone, time, date, datetime
 import time as systime
+import argparse
 
 from submodules.IPA_DN_PyNeko.v1.PyNeko import *
 
-DOMAIN_FQDN = "wctest1.dnobori.jp"
-
-TEST_MODE = True
 
 
 # 認証用 DNS サーバーコンテナがすでに作成されていれば停止して削除する
@@ -43,7 +45,7 @@ def StopDnsServerContainer():
 
 
 # 証明書の発行をリクエストする
-def RequestNewCertIssue(domainFqdn: str, testMode: bool):
+def RequestNewCertIssue(domainFqdn: str, testMode: bool, forceMode: bool):
     domainFqdn = Str.NormalizeFqdn(domainFqdn)
 
     # 認証用 DNS サーバーコンテナがすでに起動していれば停止する
@@ -64,7 +66,7 @@ def RequestNewCertIssue(domainFqdn: str, testMode: bool):
         Print("Starting the acme.sh container ...")
 
         Docker.RunDockerCommandInteractive(
-            f"run --rm -it -v /var/ipa_dn_wildcard/issued_certs/:/acme.sh/ -e ACMEDNS_UPDATE_URL=http://127.0.0.1:88/update --net=host dockervault.dn.ipantt.net/dockervault-neilpang-acme-sh:20210602_001 --issue --insecure --days 30 --dnssleep 1 --debug -d {domainFqdn} -d *.{domainFqdn} {'--test --force' if testMode else ''} --dns dns_acmedns".split(
+            f"run --rm -it -v /var/ipa_dn_wildcard/issued_certs/:/acme.sh/ -e ACMEDNS_UPDATE_URL=http://127.0.0.1:88/update --net=host dockervault.dn.ipantt.net/dockervault-neilpang-acme-sh:20210602_001 --issue --insecure --days 30 --dnssleep 1 --debug -d {domainFqdn} -d *.{domainFqdn} {'--test' if testMode else ''} {'--force' if forceMode else ''} --dns dns_acmedns".split(
             )
         )
 
@@ -83,12 +85,18 @@ def SetupCert(domainFqdn: str):
     keyFile = os.path.join(certDir, F"{domainFqdn}.key")
     certFile = os.path.join(certDir, "fullchain.cer")
 
-    Print(F"Checking the '{keyFile}' contents...")
+    csrFile = os.path.join(certDir, F"{domainFqdn}.csr")
+    csrBody = Lfs.ReadAllText(csrFile)
+
+    certConfFile = os.path.join(certDir, F"{domainFqdn}.conf")
+    certConfBody = Lfs.ReadAllText(certConfFile)
+
+    Print(F"Checking the '{certFile}' contents...")
     certBody = Lfs.ReadAllText(certFile)
     if not Str.InStr(certBody, "-----BEGIN CERTIFICATE-----", caseSensitive=True):
         raise Err(F"The issued cert file '{certFile}' has invalid format.")
 
-    Print(F"Checking the '{certFile}' contents...")
+    Print(F"Checking the '{keyFile}' contents...")
     keyBody = Lfs.ReadAllText(keyFile)
     if not Str.InStr(keyBody, "-----BEGIN RSA PRIVATE KEY-----", caseSensitive=True):
         raise Err(F"The issued key file '{keyFile}' has invalid format.")
@@ -130,16 +138,50 @@ def SetupCert(domainFqdn: str):
 
 """, {"__FQDN__": domainFqdn})
 
+    # server config の保存
     Lfs.WriteAllText(nginxConfigFile, nginxSiteConfigBody)
+
+    # コンテンツ (証明書ファイル) の保存
+    now = Time.NowLocal()
+    wwwRoot = "/var/ipa_dn_wildcard/wwwroot/wildcard_cert_files/"
+    certRoot = os.path.join(wwwRoot, domainFqdn)
+    yymmddRoot = os.path.join(certRoot, Time.ToYYYYMMDD_HHMMSS(now))
+    latestRoot = os.path.join(certRoot, "latest")
+
+    Lfs.WriteAllText(os.path.join(yymmddRoot, "cert.cer"), certBody)
+    Lfs.WriteAllText(os.path.join(yymmddRoot, "cert.key"), keyBody)
+    Lfs.WriteAllText(os.path.join(yymmddRoot, "cert.conf"), certConfBody)
+    Lfs.WriteAllText(os.path.join(yymmddRoot, "cert.csr"), csrBody)
+
+    Lfs.WriteAllText(os.path.join(latestRoot, "cert.cer"), certBody)
+    Lfs.WriteAllText(os.path.join(latestRoot, "cert.key"), keyBody)
+    Lfs.WriteAllText(os.path.join(latestRoot, "cert.conf"), certConfBody)
+    Lfs.WriteAllText(os.path.join(latestRoot, "cert.csr"), csrBody)
+
+    # ipa_dn_wildcard_ngnix という名前の Docker を再起動
+    Docker.RestartContainer("ipa_dn_wildcard_ngnix")
 
 
 
 
 # メイン処理
 if __name__ == '__main__':
+    # 引数解析
+    parser = argparse.ArgumentParser()
+    parser.add_argument("domain_fqdn", metavar="<Domain FQDN>", type=str, help="Specify domain fqdn (e.g. abc.example.org)")
+    parser.add_argument("--test", action="store_true", help="Test mode (use Let's encrypt staging server)")
+    parser.add_argument("--force", action="store_true",
+                        help="Force mode (Renew cert forcefully regardless the expires date)")
+
+    args = parser.parse_args()
+    domainFqdn: str = args.domain_fqdn
+    testMode: bool = args.test
+    forceMode: bool = args.force
+
     # まず証明書を発行 (更新) する
-    #RequestNewCertIssue(DOMAIN_FQDN, TEST_MODE)
+    # なお、更新の必要がない場合 (有効期限がまだまだある) は、ここで例外が発生し、これ以降の処理は実施されない
+    RequestNewCertIssue(domainFqdn, testMode, forceMode)
 
     # 証明書が正しく発行 (更新) されたら、その内容を確認した上で、nginx に適用する
-    SetupCert(DOMAIN_FQDN)
+    SetupCert(domainFqdn)
    
