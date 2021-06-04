@@ -21,6 +21,7 @@ DOMAIN_FQDN = "wctest1.dnobori.jp"
 
 TEST_MODE = True
 
+
 # 認証用 DNS サーバーコンテナがすでに作成されていれば停止して削除する
 def StopDnsServerContainer():
     # 認証用 DNS サーバーコンテナがすでに作成されているかどうか
@@ -40,8 +41,11 @@ def StopDnsServerContainer():
         except:
             pass
 
+
 # 証明書の発行をリクエストする
 def RequestNewCertIssue(domainFqdn: str, testMode: bool):
+    domainFqdn = Str.NormalizeFqdn(domainFqdn)
+
     # 認証用 DNS サーバーコンテナがすでに起動していれば停止する
     StopDnsServerContainer()
 
@@ -54,7 +58,6 @@ def RequestNewCertIssue(domainFqdn: str, testMode: bool):
     )
 
     Print("The container 'dnsserver' running OK.")
-
 
     # acme.sh コンテナを実行し Let's Encrypt から証明書を取得する
     try:
@@ -71,50 +74,13 @@ def RequestNewCertIssue(domainFqdn: str, testMode: bool):
         StopDnsServerContainer()
 
 
-while True:
-    print(Time.FloatTick64())
-    Time.Sleep(1000)
-    
+# 証明書が正しく発行 (更新) されたら、その内容を確認した上で、nginx に適用し提供開始する
+def SetupCert(domainFqdn: str):
+    domainFqdn = Str.NormalizeFqdn(domainFqdn)
 
-print(systime.perf_counter_ns())
-systime.sleep(1)
-print(systime.perf_counter_ns())
-systime.sleep(1)
-print(systime.perf_counter_ns())
-
-
-utcnow = Time.UtcNow()
-print(utcnow)
-ms = Time.ToTime64(utcnow)
-print(ms)
-print(Time.FromTime64(ms))
-
-localnow = Time.LocalNow()
-print(localnow)
-ms = Time.ToTime64(localnow)
-print(ms)
-print(Time.FromTime64(ms, True))
-
-localnow = Time.ToLocal(localnow)
-print(localnow)
-
-print(datetime.now())
-print(Time.ToLocal(datetime.now()))
-print(Time.ToLocal(Time.ToLocal(datetime.now())))
-print(Time.ToUtc(Time.ToLocal(datetime.now())))
-
-
-
-exit(0)
-
-# メイン処理
-if __name__ == '__main__':
-    # まず証明書を発行 (更新) する
-    #RequestNewCertIssue(DOMAIN_FQDN, TEST_MODE)
-
-    # 証明書が正しく発行 (更新) されたら、その内容を確認する
-    certDir = os.path.join("/var/ipa_dn_wildcard/issued_certs/", DOMAIN_FQDN + "/")
-    keyFile = os.path.join(certDir, F"{DOMAIN_FQDN}.key")
+    certDir = os.path.join(
+        "/var/ipa_dn_wildcard/issued_certs/", domainFqdn + "/")
+    keyFile = os.path.join(certDir, F"{domainFqdn}.key")
     certFile = os.path.join(certDir, "fullchain.cer")
 
     Print(F"Checking the '{keyFile}' contents...")
@@ -126,10 +92,54 @@ if __name__ == '__main__':
     keyBody = Lfs.ReadAllText(keyFile)
     if not Str.InStr(keyBody, "-----BEGIN RSA PRIVATE KEY-----", caseSensitive=True):
         raise Err(F"The issued key file '{keyFile}' has invalid format.")
-    
+
     Print("Issued cert files are OK.")
 
+    # nginx 用に証明書を保存する
+    nginxCertFile = F"/var/ipa_dn_wildcard/nginx/sites.d/wildcard_cert_{domainFqdn}.cer"
+    nginxKeyFile = F"/var/ipa_dn_wildcard/nginx/sites.d/wildcard_cert_{domainFqdn}.key"
+    nginxConfigFile = F"/var/ipa_dn_wildcard/nginx/sites.d/server_{domainFqdn}.conf"
+    Lfs.WriteAllText(nginxCertFile, certBody)
+    Lfs.WriteAllText(nginxKeyFile, keyBody)
+
+    # nginx 用の追加の config ファイルを生成して保存する
+    nginxSiteConfigBody = Str.ReplaceMultiStr("""  
+  server {
+    listen 80;
+    listen [::]:80;
+    listen [::]:443 ssl;
+    listen 443 ssl;
     
+    server_name ssl-cert-server.__FQDN__;
+    
+    server_tokens off;
+    ssl_certificate /etc/nginx/sites.d/wildcard_cert___FQDN__.cer;
+    ssl_certificate_key /etc/nginx/sites.d/wildcard_cert___FQDN__.key;
+    
+    location / {
+      root /usr/share/nginx/html/;
+      index a.html;
+      autoindex on;
+      autoindex_exact_size on;
+      autoindex_format html;
+      autoindex_localtime on;
+      auth_basic "Auth requested";
+      auth_basic_user_file /etc/nginx/htpasswd.txt;
+    }
+  }
+
+""", {"__FQDN__": domainFqdn})
+
+    Lfs.WriteAllText(nginxConfigFile, nginxSiteConfigBody)
 
 
 
+
+# メイン処理
+if __name__ == '__main__':
+    # まず証明書を発行 (更新) する
+    #RequestNewCertIssue(DOMAIN_FQDN, TEST_MODE)
+
+    # 証明書が正しく発行 (更新) されたら、その内容を確認した上で、nginx に適用する
+    SetupCert(DOMAIN_FQDN)
+   
