@@ -15,21 +15,9 @@ import typing
 
 from submodules.IPA_DN_PyNeko.v1.PyNeko import *
 
-
-ret = Docker.RunDockerCommandJson(["ps", "-a"], DockerProcessItem, exact=True)
-
-Print(ret)
+print(Str.ReplaceStr("abcdef", "C", "_", caseSensitive=True))
 exit(0)
 
-#Print(res.StdOut.splitlines()[0])
-
-
-
-
-class TestClass1:
-    LocalVolumes: str
-
-list = Json.JsonLinesToObjectList(res.StdOut, TestClass1)
-
-Print(list)
+ret = Docker.GetContainer("hardcore_turing")
+Print(ret)
 
