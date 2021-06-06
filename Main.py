@@ -69,7 +69,7 @@ def RequestNewCertIssue(domainFqdn: str, testMode: bool, forceMode: bool):
         Print("Starting the acme.sh container ...")
 
         Docker.RunDockerCommandInteractive(
-            f"run --rm -it -v /var/ipa_dn_wildcard/issued_certs/:/acme.sh/ -e ACMEDNS_UPDATE_URL=http://127.0.0.1:88/update --net=host dockervault.dn.ipantt.net/dockervault-neilpang-acme-sh:20210602_001 --issue --insecure --days 30 --dnssleep 1 --debug -d {domainFqdn} -d *.{domainFqdn} {'--test' if testMode else ''} {'--force' if forceMode else ''} --dns dns_acmedns".split(
+            f"run --rm -i -v /var/ipa_dn_wildcard/issued_certs/:/acme.sh/ -e ACMEDNS_UPDATE_URL=http://127.0.0.1:88/update --net=host dockervault.dn.ipantt.net/dockervault-neilpang-acme-sh:20210602_001 --issue --insecure --days 30 --dnssleep 1 --debug -d {domainFqdn} -d *.{domainFqdn} {'--test' if testMode else ''} {'--force' if forceMode else ''} --dns dns_acmedns".split(
             )
         )
 
@@ -121,7 +121,7 @@ def SetupCert(domainFqdn: str):
     listen [::]:443 ssl;
     listen 443 ssl;
     
-    server_name ssl-cert-server.__FQDN__;
+    server_name __FQDN__ www.__FQDN__ __FQDN__;
     
     server_tokens off;
     ssl_certificate /etc/nginx/sites.d/wildcard_cert___FQDN__.cer;
@@ -129,7 +129,16 @@ def SetupCert(domainFqdn: str):
     
     location / {
       root /usr/share/nginx/html/;
-      index a.html;
+      index __dummy_file__.html;
+      autoindex on;
+      autoindex_exact_size on;
+      autoindex_format html;
+      autoindex_localtime on;
+    }
+
+    location /wildcard_cert_files/ {
+      alias /usr/share/nginx/html/wildcard_cert_files/;
+      index __dummy_file__.html;
       autoindex on;
       autoindex_exact_size on;
       autoindex_format html;
@@ -151,15 +160,19 @@ def SetupCert(domainFqdn: str):
     yymmddRoot = os.path.join(certRoot, Time.ToYYYYMMDD_HHMMSS(now))
     latestRoot = os.path.join(certRoot, "latest")
 
+    timestampBody = Time.ToYYYYMMDD_HHMMSS(now) + Str.NEWLINE_LF
+
     Lfs.WriteAllText(os.path.join(yymmddRoot, "cert.cer"), certBody)
     Lfs.WriteAllText(os.path.join(yymmddRoot, "cert.key"), keyBody)
     Lfs.WriteAllText(os.path.join(yymmddRoot, "cert.conf"), certConfBody)
     Lfs.WriteAllText(os.path.join(yymmddRoot, "cert.csr"), csrBody)
+    Lfs.WriteAllText(os.path.join(yymmddRoot, "timestamp.txt"), timestampBody)
 
     Lfs.WriteAllText(os.path.join(latestRoot, "cert.cer"), certBody)
     Lfs.WriteAllText(os.path.join(latestRoot, "cert.key"), keyBody)
     Lfs.WriteAllText(os.path.join(latestRoot, "cert.conf"), certConfBody)
     Lfs.WriteAllText(os.path.join(latestRoot, "cert.csr"), csrBody)
+    Lfs.WriteAllText(os.path.join(latestRoot, "timestamp.txt"), timestampBody)
 
     # ipa_dn_wildcard_ngnix という名前の Docker を再起動
     Docker.RestartContainer("ipa_dn_wildcard_ngnix")
