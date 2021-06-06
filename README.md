@@ -216,7 +216,7 @@ cd /opt/IPA_DN_WildcardCertServerUtil/
 git clone --recursive https://github.com/IPA-CyberLab/IPA_DN_WildcardCertServerUtil.git
 
 # 本 DNS 証明書更新プログラムをテスト実行をしてみる。
-sudo /usr/bin/env python3 /opt/IPA_DN_WildcardCertServerUtil/IPA_DN_WildcardCertServerUtil/Main.py wctest3.dnobori.jp --force
+sudo /usr/bin/env python3 /opt/IPA_DN_WildcardCertServerUtil/IPA_DN_WildcardCertServerUtil/Main.py 【ドメイン名】 --force
 
 # 糸冬了！！
 ```
