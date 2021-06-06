@@ -169,6 +169,8 @@ EOF
 # Docker を用いて nginx サーバーを起動する。
 # これにより、Web サーバーは、Linux 起動後に自動起動するようになる。
 sudo docker run -d --restart always --name ipa_dn_wildcard_ngnix --mount type=bind,source=/var/ipa_dn_wildcard/nginx/,target=/etc/nginx/,readonly --mount type=bind,source=/var/ipa_dn_wildcard/wwwroot/,target=/usr/share/nginx/html/,readonly -p 80:80 -p 443:443 dockervault.dn.ipantt.net/dockervault-nginx-alpine-x64:20210604_001
+
+# 糸冬了！！
 ```
 
 
@@ -215,6 +217,8 @@ git clone --recursive https://github.com/IPA-CyberLab/IPA_DN_WildcardCertServerU
 
 # 本 DNS 証明書更新プログラムをテスト実行をしてみる。
 sudo /usr/bin/env python3 /opt/IPA_DN_WildcardCertServerUtil/IPA_DN_WildcardCertServerUtil/Main.py wctest3.dnobori.jp --force
+
+# 糸冬了！！
 ```
 
 上記のテスト実行を行なうと、画面にダラダラと Let's Encrypt によるワイルドカード証明書発行の様子が表示される。この過程で、Docker が活用され、認証用の一時的な DNS サーバーが立ち上がったり、ACME.sh スクリプトが呼び出されたりするなど、色々と複雑なことが行なわれる。
@@ -262,6 +266,8 @@ EOF
 # cron の設定ファイルを再読込する。
 sudo service cron stop
 sudo service cron start
+
+# 糸冬了！！
 ```
 
 
