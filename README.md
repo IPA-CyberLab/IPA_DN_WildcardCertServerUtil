@@ -68,7 +68,7 @@ echo nameserver 8.8.8.8 | sudo tee /etc/resolv.conf
 # sudo: unable to resolve host ip-xxx-xxx-xxx-xxx: Name or service not known
 # などと言ってくるようになりうっとおしいので、
 # /etc/hosts に自ホストを追記して解決する。
-echo $(ip route get 8.8.8.8 | cut -d " " -f 3 | head -n 1) $(hostname) | sudo tee -a /etc/hosts
+echo $(ip route get 8.8.8.8 | cut -d " " -f 7 | head -n 1) $(hostname) | sudo tee -a /etc/hosts
 
 # apt-get でいやないやな Docker と apache2-utilsをインストールする。
 # apache2-utils をインストールする理由は、htpasswd コマンド を利用したいためである。
