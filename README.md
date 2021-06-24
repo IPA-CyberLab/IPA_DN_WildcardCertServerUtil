@@ -248,7 +248,7 @@ date >> /var/log/run_ipa_dn_wildcard_util.log
 
 /usr/bin/env python3 /opt/IPA_DN_WildcardCertServerUtil/IPA_DN_WildcardCertServerUtil/Main.py 【ドメイン名】 >> /var/log/run_ipa_dn_wildcard_util.log 2>&1
 
-echo Exit code: $? /var/log/run_ipa_dn_wildcard_util.log
+echo Exit code: $? >> /var/log/run_ipa_dn_wildcard_util.log
 
 date >> /var/log/run_ipa_dn_wildcard_util.log
 echo --- Finished --- >> /var/log/run_ipa_dn_wildcard_util.log
