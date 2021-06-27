@@ -117,6 +117,7 @@ http {
   access_log /var/log/nginx/access.log main;
   
   limit_req_zone $binary_remote_addr zone=one:64m rate=1r/s nodelay;
+  limit_req zone=one burst=20 nodelay;
   
   tcp_nopush on;
   tcp_nodelay on;
