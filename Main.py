@@ -134,7 +134,6 @@ def SetupCert(domainFqdn: str):
       autoindex_exact_size on;
       autoindex_format html;
       autoindex_localtime on;
-      limit_req zone=one burst=10;
     }
 
     location /wildcard_cert_files/ {
@@ -146,7 +145,6 @@ def SetupCert(domainFqdn: str):
       autoindex_localtime on;
       auth_basic "Auth requested";
       auth_basic_user_file /etc/nginx/htpasswd.txt;
-      limit_req zone=one burst=10;
     }
   }
 
