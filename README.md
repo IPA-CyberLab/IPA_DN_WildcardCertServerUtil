@@ -116,6 +116,8 @@ http {
   log_format main '[$time_local] Client=[$remote_addr]:$remote_port Server=[$server_addr]:$server_port Host=$host Proto=$server_protocol Request="$request" Status=$status Size=$body_bytes_sent Referer="$http_referer" UserAgent="$http_user_agent" Username=$remote_user Ssl=$ssl_protocol Cipher=$ssl_cipher';
   access_log /var/log/nginx/access.log main;
   
+  limit_req_zone $binary_remote_addr zone=one:64m rate=1r/s nodelay;
+  
   tcp_nopush on;
   tcp_nodelay on;
   sendfile on;
@@ -148,6 +150,7 @@ http {
       autoindex_exact_size on;
       autoindex_format html;
       autoindex_localtime on;
+      limit_req zone=one;
     }
     
     location /wildcard_cert_files/ {
@@ -159,6 +162,7 @@ http {
       autoindex_localtime on;
       auth_basic "Auth requested";
       auth_basic_user_file /etc/nginx/htpasswd.txt;
+      limit_req zone=one;
     }
   }
   
