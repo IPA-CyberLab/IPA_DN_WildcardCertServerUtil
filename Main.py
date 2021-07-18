@@ -112,6 +112,8 @@ def SetupCert(domainFqdn: str):
         F"openssl pkcs12 -export -in {certFile} -inkey {keyFile} -out {pfxFile} -passout pass:",
         shell=True,
         timeoutSecs=15)
+    
+    pfxBody = Lfs.ReadAllData(pfxFile)
 
     # nginx 用に証明書を保存する
     nginxCertFile = F"/var/ipa_dn_wildcard/nginx/sites.d/wildcard_cert_{domainFqdn}.cer"
@@ -173,12 +175,14 @@ def SetupCert(domainFqdn: str):
     Lfs.WriteAllText(os.path.join(yymmddRoot, "cert.key"), keyBody)
     Lfs.WriteAllText(os.path.join(yymmddRoot, "cert.conf"), certConfBody)
     Lfs.WriteAllText(os.path.join(yymmddRoot, "cert.csr"), csrBody)
+    Lfs.WriteAllData(os.path.join(yymmddRoot, "cert.pfx"), pfxBody)
     Lfs.WriteAllText(os.path.join(yymmddRoot, "timestamp.txt"), timestampBody)
 
     Lfs.WriteAllText(os.path.join(latestRoot, "cert.cer"), certBody)
     Lfs.WriteAllText(os.path.join(latestRoot, "cert.key"), keyBody)
     Lfs.WriteAllText(os.path.join(latestRoot, "cert.conf"), certConfBody)
     Lfs.WriteAllText(os.path.join(latestRoot, "cert.csr"), csrBody)
+    Lfs.WriteAllData(os.path.join(latestRoot, "cert.pfx"), pfxBody)
     Lfs.WriteAllText(os.path.join(latestRoot, "timestamp.txt"), timestampBody)
 
     # ipa_dn_wildcard_ngnix という名前の Docker を再起動
