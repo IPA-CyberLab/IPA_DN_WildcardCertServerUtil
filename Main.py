@@ -188,11 +188,14 @@ if __name__ == '__main__':
     parser.add_argument("--test", action="store_true", help="Test mode (use Let's encrypt staging server)")
     parser.add_argument("--force", action="store_true",
                         help="Force mode (Renew cert forcefully regardless the expires date)")
+    parser.add_argument("--copyonly", action="store_true",
+                        help="Do not renew certificates. Copy only. (for debug)")
 
     args = parser.parse_args()
     domainFqdn: str = args.domain_fqdn
     testMode: bool = args.test
     forceMode: bool = args.force
+    copyonly: bool = args.copyonly
 
     # まず証明書を発行 (更新) する
     # なお、更新の必要がない場合 (有効期限がまだまだある) は、ここで例外が発生し、これ以降の処理は実施されない
