@@ -106,6 +106,13 @@ def SetupCert(domainFqdn: str):
 
     Print("Issued cert files are OK.")
 
+    # .p12 ファイルを生成する
+    pfxFile = os.path.join("/tmp/", F"_tmp_{domainFqdn}.pfx")
+    EasyExec.Run(
+        F"openssl pkcs12 -export -in {certFile} -inkey {keyFile} -out {pfxFile} -passout pass:".split(),
+        shell=True,
+        timeoutSecs=15)
+
     # nginx 用に証明書を保存する
     nginxCertFile = F"/var/ipa_dn_wildcard/nginx/sites.d/wildcard_cert_{domainFqdn}.cer"
     nginxKeyFile = F"/var/ipa_dn_wildcard/nginx/sites.d/wildcard_cert_{domainFqdn}.key"
