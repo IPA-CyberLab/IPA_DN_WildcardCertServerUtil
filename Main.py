@@ -109,7 +109,7 @@ def SetupCert(domainFqdn: str):
     # .p12 ファイルを生成する
     pfxFile = os.path.join("/tmp/", F"_tmp_{domainFqdn}.pfx")
     EasyExec.Run(
-        F"openssl pkcs12 -export -in {certFile} -inkey {keyFile} -out {pfxFile} -passout pass:".split(),
+        "openssl pkcs12 -export -in {certFile} -inkey {keyFile} -out {pfxFile} -passout pass:",
         shell=True,
         timeoutSecs=15)
 
