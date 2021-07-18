@@ -199,7 +199,8 @@ if __name__ == '__main__':
 
     # まず証明書を発行 (更新) する
     # なお、更新の必要がない場合 (有効期限がまだまだある) は、ここで例外が発生し、これ以降の処理は実施されない
-    RequestNewCertIssue(domainFqdn, testMode, forceMode)
+    if not copyonly:
+        RequestNewCertIssue(domainFqdn, testMode, forceMode)
 
     # 証明書が正しく発行 (更新) されたら、その内容を確認した上で、nginx に適用する
     SetupCert(domainFqdn)
