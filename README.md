@@ -123,6 +123,8 @@ http {
   tcp_nodelay on;
   sendfile on;
   keepalive_timeout 65;
+
+  server_names_hash_bucket_size 64;
   
   ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
   ssl_prefer_server_ciphers on;
