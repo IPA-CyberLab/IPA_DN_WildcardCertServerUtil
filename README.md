@@ -116,7 +116,7 @@ http {
   log_format main '[$time_local] Client=[$remote_addr]:$remote_port Server=[$server_addr]:$server_port Host=$host Proto=$server_protocol Request="$request" Status=$status Size=$body_bytes_sent Referer="$http_referer" UserAgent="$http_user_agent" Username=$remote_user Ssl=$ssl_protocol Cipher=$ssl_cipher';
   access_log /var/log/nginx/access.log main;
   
-  limit_req_zone $binary_remote_addr zone=one:64m rate=1r/s nodelay;
+  limit_req_zone $binary_remote_addr zone=one:64m rate=40r/m;
   limit_req zone=one burst=20 nodelay;
   
   tcp_nopush on;
@@ -124,7 +124,7 @@ http {
   sendfile on;
   keepalive_timeout 65;
 
-  server_names_hash_bucket_size 64;
+  server_names_hash_bucket_size 128;
   
   ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
   ssl_prefer_server_ciphers on;
