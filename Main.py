@@ -195,7 +195,9 @@ def SetupCert(domainFqdn: str):
 if __name__ == '__main__':
     src = Lfs.ReadAllText("./test.cer")
     res = Util.GetSingleHostCertAndIntermediateCertsFromCombinedCert(src)
-    print(res)
+    Lfs.WriteAllText("./1.cer", res[0])
+    Lfs.WriteAllText("./2.cer", res[1])
+    Lfs.WriteAllText("./3.cer", res[2])
     exit()
     # 引数解析
     parser = argparse.ArgumentParser()
