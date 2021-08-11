@@ -193,6 +193,7 @@ def SetupCert(domainFqdn: str):
 
 # メイン処理
 if __name__ == '__main__':
+    exit()
     # 引数解析
     parser = argparse.ArgumentParser()
     parser.add_argument("domain_fqdn", metavar="<Domain FQDN>", type=str, help="Specify domain fqdn (e.g. abc.example.org)")
