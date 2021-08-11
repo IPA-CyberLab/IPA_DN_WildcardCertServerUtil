@@ -115,6 +115,11 @@ def SetupCert(domainFqdn: str):
     
     pfxBody = Lfs.ReadAllData(pfxFile)
 
+    # 証明書チェーンを、ホスト証明書と中間証明書列に分割する (古い Apache 用)
+    certSepareted = Util.GetSingleHostCertAndIntermediateCertsFromCombinedCert(certBody)
+    certBody_Host = certSepareted[0]
+    certBody_Intermediate = certSepareted[1]
+
     # nginx 用に証明書を保存する
     nginxCertFile = F"/var/ipa_dn_wildcard/nginx/sites.d/wildcard_cert_{domainFqdn}.cer"
     nginxKeyFile = F"/var/ipa_dn_wildcard/nginx/sites.d/wildcard_cert_{domainFqdn}.key"
@@ -172,6 +177,10 @@ def SetupCert(domainFqdn: str):
     timestampBody = Time.ToYYYYMMDD_HHMMSS(now) + Str.NEWLINE_LF
 
     Lfs.WriteAllText(os.path.join(yymmddRoot, "cert.cer"), certBody)
+    Lfs.WriteAllText(os.path.join(
+        yymmddRoot, "cert_01_host_single.cer"), certBody_Host)
+    Lfs.WriteAllText(os.path.join(
+        yymmddRoot, "cert_02_intermediates.cer"), certBody_Intermediate)
     Lfs.WriteAllText(os.path.join(yymmddRoot, "cert.key"), keyBody)
     Lfs.WriteAllText(os.path.join(yymmddRoot, "cert.conf"), certConfBody)
     Lfs.WriteAllText(os.path.join(yymmddRoot, "cert.csr"), csrBody)
@@ -179,6 +188,10 @@ def SetupCert(domainFqdn: str):
     Lfs.WriteAllText(os.path.join(yymmddRoot, "timestamp.txt"), timestampBody)
 
     Lfs.WriteAllText(os.path.join(latestRoot, "cert.cer"), certBody)
+    Lfs.WriteAllText(os.path.join(
+        latestRoot, "cert_01_host_single.cer"), certBody_Host)
+    Lfs.WriteAllText(os.path.join(
+        latestRoot, "cert_02_intermediates.cer"), certBody_Intermediate)
     Lfs.WriteAllText(os.path.join(latestRoot, "cert.key"), keyBody)
     Lfs.WriteAllText(os.path.join(latestRoot, "cert.conf"), certConfBody)
     Lfs.WriteAllText(os.path.join(latestRoot, "cert.csr"), csrBody)
@@ -193,12 +206,6 @@ def SetupCert(domainFqdn: str):
 
 # メイン処理
 if __name__ == '__main__':
-    src = Lfs.ReadAllText("./test.cer")
-    res = Util.GetSingleHostCertAndIntermediateCertsFromCombinedCert(src)
-    Lfs.WriteAllText("./1.cer", res[0])
-    Lfs.WriteAllText("./2.cer", res[1])
-    Lfs.WriteAllText("./3.cer", res[2])
-    exit()
     # 引数解析
     parser = argparse.ArgumentParser()
     parser.add_argument("domain_fqdn", metavar="<Domain FQDN>", type=str, help="Specify domain fqdn (e.g. abc.example.org)")
