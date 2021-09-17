@@ -5,8 +5,9 @@
 ## 目的
 本プログラム (IPA_DN_WildcardCertServerUtil) は、IPA_DN_WildCardDnsServer (Go 言語で書かれたステートレスなワイルドカード DNS サーバー, https://github.com/IPA-CyberLab/IPA_DN_WildCardDnsServer/) と連携して動作させることが可能な、Let's Encrypt に対応したワイルドカード SSL 証明書 (例: `*.example.org`) を定期的に更新し続け、更新された最新の証明書を nginx ベースの Web サーバーで Basic 認証を施した上で同じ組織内の他のサーバーに対して安定して提供するための Web サーバーユーティリティである。
 
-本ユーティリティは、IPA_DN_WildCardDnsServer (Go 言語で書かれたステートレスなワイルドカード DNS サーバー, https://github.com/IPA-CyberLab/IPA_DN_WildCardDnsServer/) と連携して動作させることを目的としている。ワイルドカード DNS の概念と使い方の主な説明、および DNS サーバーのインストール・稼働方法は、https://github.com/IPA-CyberLab/IPA_DN_WildCardDnsServer/ のほうに記載しているので、そちらを参照すること。
+- 本ユーティリティは、IPA_DN_WildCardDnsServer (Go 言語で書かれたステートレスなワイルドカード DNS サーバー, https://github.com/IPA-CyberLab/IPA_DN_WildCardDnsServer/) と連携して動作させることを「手法 1」としている。ワイルドカード DNS の概念と使い方の主な説明、および DNS サーバーのインストール・稼働方法は、https://github.com/IPA-CyberLab/IPA_DN_WildCardDnsServer/ のほうに記載しているので、そちらを参照すること。
 
+- なお、「手法 2」として、IPA_DN_WildCardDnsServer を使用せず、通常の DNS サーバー (例: BIND, Microsoft DNS, PowerDNS, NSD, AWS Route 53、その他の各種の DNS サービスプロバイダの DNS サーバー) で DNS ドメインのゾーンを運営している場合も、本プログラムを利用することは可能である。詳しくは、下記の説明のとおりである。
 
 # インストールマニュアル
 以下の説明では、本プログラムを `example.org` というドメインで使用する場合を例示している。この `example.org` という文字列を、実際に運用したいドメイン名に置換して解釈すること。
