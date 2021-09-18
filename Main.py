@@ -209,12 +209,29 @@ def GetOcspServerUrlFromCert(certPath: str) -> str:
         timeoutSecs=15)
     
     return Str.GetFirstFilledLine(res.StdOut)
+
+def OcspIsCertificateRevokedInternal(certPath: str, interPath: str) -> bool:
+    url = GetOcspServerUrlFromCert(certPath)
+
+    res = EasyExec.RunPiped(
+        F"openssl ocsp -issuer {interPath} -cert {certPath} -text -url {url}".split(),
+        shell=False,
+        timeoutSecs=30)
     
+    lines = Str.GetLines(res.StdOutAndErr)
+
+    for line in lines:
+        if (Str.InStr(line, "Cert Status: revoked")):
+            return True
+    
+    return False
 
 # メイン処理
 if __name__ == '__main__':
     # test
-    s = GetOcspServerUrlFromCert("/var/ipa_dn_wildcard/wwwroot/wildcard_cert_files/wctest.ipantt.net/latest/cert_01_host_single.cer")
+    s = OcspIsCertificateRevokedInternal(
+        "/var/ipa_dn_wildcard/wwwroot/wildcard_cert_files/wctest.ipantt.net/latest/cert_01_host_single.cer",
+        "/var/ipa_dn_wildcard/wwwroot/wildcard_cert_files/wctest.ipantt.net/latest/cert_02_intermediates.cer")
     print(s)
     exit()
 
