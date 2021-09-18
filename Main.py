@@ -230,8 +230,8 @@ def OcspIsCertificateRevokedInternal(certPath: str, interPath: str) -> bool:
 if __name__ == '__main__':
     # test
     s = OcspIsCertificateRevokedInternal(
-        "/var/ipa_dn_wildcard/wwwroot/wildcard_cert_files/wctest.ipantt.net/20210918_202341/cert_01_host_single.cer",
-        "/var/ipa_dn_wildcard/wwwroot/wildcard_cert_files/wctest.ipantt.net/20210918_202341/cert_02_intermediates.cer")
+        "/var/ipa_dn_wildcard/wwwroot/wildcard_cert_files/wctest.ipantt.net/20210918_193009/cert_01_host_single.cer",
+        "/var/ipa_dn_wildcard/wwwroot/wildcard_cert_files/wctest.ipantt.net/20210918_193009/cert_02_intermediates.cer")
     print(s)
     exit()
 
