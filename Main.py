@@ -202,10 +202,22 @@ def SetupCert(domainFqdn: str):
     Docker.RestartContainer("ipa_dn_wildcard_ngnix")
 
 
-
+def GetOcspServerUrlFromCert(certPath: str) -> str:
+    res = EasyExec.RunPiped(
+        F"openssl x509 -noout -ocsp_uri -in {certPath}".split(),
+        shell=False,
+        timeoutSecs=15)
+    
+    return Str.GetFirstFilledLine(res.StdOut)
+    
 
 # メイン処理
 if __name__ == '__main__':
+    # test
+    s = GetOcspServerUrlFromCert("/var/ipa_dn_wildcard/wwwroot/wildcard_cert_files/wctest.ipantt.net/latest/cert_01_host_single.cer")
+    print(s)
+    exit()
+
     # 引数解析
     parser = argparse.ArgumentParser()
     parser.add_argument("domain_fqdn", metavar="<Domain FQDN>", type=str, help="Specify domain fqdn (e.g. abc.example.org)")
