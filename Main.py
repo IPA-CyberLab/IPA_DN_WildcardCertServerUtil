@@ -71,7 +71,9 @@ def RequestNewCertIssue(domainFqdn: str, testMode: bool, forceMode: bool):
     isRevoked = OpenSslUtil.OcspIsCertificateRevoked(latestCertPath, latestKeyPath)
 
     if isRevoked:
-        Print("OcspIsCertificateRevoked returns True. Using force certificate renewal.")
+        msg = F"Domain name '{domainFqdn}': OcspIsCertificateRevoked returns True. Using force certificate renewal."
+        Print(msg)
+        EasyExec.Run(["logger", msg], shell=False, ignoreError=True, timeoutSecs=15)
         forceMode = True
 
     # acme.sh コンテナを実行し Let's Encrypt から証明書を取得する
@@ -211,14 +213,6 @@ def SetupCert(domainFqdn: str):
     # ipa_dn_wildcard_ngnix という名前の Docker を再起動
     Docker.RestartContainer("ipa_dn_wildcard_ngnix")
 
-
-def GetOcspServerUrlFromCert(certPath: str) -> str:
-    res = EasyExec.RunPiped(
-        F"openssl x509 -noout -ocsp_uri -in {certPath}".split(),
-        shell=False,
-        timeoutSecs=15)
-    
-    return Str.GetFirstFilledLine(res.StdOut)
 
 
 # メイン処理
