@@ -64,6 +64,16 @@ def RequestNewCertIssue(domainFqdn: str, testMode: bool, forceMode: bool):
 
     Print("The container 'dnsserver' running OK.")
 
+    # すでに証明書ファイルが存在する場合、最新の証明書ファイルに対して OCSP を用いて証明書が失効していないかどうか確認する
+    latestCertPath = F"/var/ipa_dn_wildcard/wwwroot/wildcard_cert_files/{domainFqdn}/latest/cert_01_host_single.cer"
+    latestKeyPath = F"/var/ipa_dn_wildcard/wwwroot/wildcard_cert_files/{domainFqdn}/latest/cert_02_intermediates.cer"
+
+    isRevoked = OpenSslUtil.OcspIsCertificateRevoked(latestCertPath, latestKeyPath)
+
+    if isRevoked:
+        Print("OcspIsCertificateRevoked returns True. Using force certificate renewal.")
+        forceMode = True
+
     # acme.sh コンテナを実行し Let's Encrypt から証明書を取得する
     try:
         Print("Starting the acme.sh container ...")
@@ -210,31 +220,9 @@ def GetOcspServerUrlFromCert(certPath: str) -> str:
     
     return Str.GetFirstFilledLine(res.StdOut)
 
-def OcspIsCertificateRevokedInternal(certPath: str, interPath: str) -> bool:
-    url = GetOcspServerUrlFromCert(certPath)
-
-    res = EasyExec.RunPiped(
-        F"openssl ocsp -issuer {interPath} -cert {certPath} -text -url {url}".split(),
-        shell=False,
-        timeoutSecs=30)
-    
-    lines = Str.GetLines(res.StdOutAndErr)
-
-    for line in lines:
-        if (Str.InStr(line, "Cert Status: revoked")):
-            return True
-    
-    return False
 
 # メイン処理
 if __name__ == '__main__':
-    # test
-    s = OcspIsCertificateRevokedInternal(
-        "/var/ipa_dn_wildcard/wwwroot/wildcard_cert_files/wctest.ipantt.net/20210918_193009/cert_01_host_single.cer",
-        "/var/ipa_dn_wildcard/wwwroot/wildcard_cert_files/wctest.ipantt.net/20210918_193009/cert_02_intermediates.cer")
-    print(s)
-    exit()
-
     # 引数解析
     parser = argparse.ArgumentParser()
     parser.add_argument("domain_fqdn", metavar="<Domain FQDN>", type=str, help="Specify domain fqdn (e.g. abc.example.org)")
