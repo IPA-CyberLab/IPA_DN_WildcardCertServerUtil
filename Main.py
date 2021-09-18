@@ -69,7 +69,7 @@ def RequestNewCertIssue(domainFqdn: str, testMode: bool, forceMode: bool):
         Print("Starting the acme.sh container ...")
 
         Docker.RunDockerCommandInteractive(
-            f"run --rm -i -v /var/ipa_dn_wildcard/issued_certs/:/acme.sh/ -e ACMEDNS_UPDATE_URL=http://127.0.0.1:88/update --net=host dockervault.dn.ipantt.net/dockervault-neilpang-acme-sh:20210602_001 --issue --insecure --days 30 --dnssleep 1 --debug -d {domainFqdn} -d *.{domainFqdn} {'--test' if testMode else ''} {'--force' if forceMode else ''} --dns dns_acmedns".split(
+            f"run --rm -i -v /var/ipa_dn_wildcard/issued_certs/:/acme.sh/ -e ACMEDNS_UPDATE_URL=http://127.0.0.1:88/update --net=host dockervault.dn.ipantt.net/dockervault-neilpang-acme-sh:20210602_001 --issue --always-force-new-domain-key --insecure --days 30 --dnssleep 1 --debug -d {domainFqdn} -d *.{domainFqdn} {'--test' if testMode else ''} {'--force' if forceMode else ''} --dns dns_acmedns".split(
             )
         )
 
