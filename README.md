@@ -1,4 +1,4 @@
-﻿# IPA_DN_WildcardCertServerUtil (Python で書かれた Let's Encrypt ワイルドカード DNS 更新・証明書ファイル提供サーバー)
+﻿# IPA_DN_WildcardCertServerUtil (Python で書かれた Let's Encrypt ワイルドカード DNS 用証明書自動更新・証明書ファイル提供サーバー)
 作成: 登 大遊 (Daiyuu Nobori)
 
 
