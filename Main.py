@@ -48,7 +48,7 @@ def StopDnsServerContainer():
 
 
 # 証明書の発行をリクエストする
-def RequestNewCertIssue(domainFqdn: str, testMode: bool, forceMode: bool):
+def RequestNewCertIssue(domainFqdn: str, testMode: bool, forceMode: bool, preferredChain: str):
     domainFqdn = Str.NormalizeFqdn(domainFqdn)
 
     # 認証用 DNS サーバーコンテナがすでに起動していれば停止する
@@ -80,9 +80,15 @@ def RequestNewCertIssue(domainFqdn: str, testMode: bool, forceMode: bool):
     try:
         Print("Starting the acme.sh container ...")
 
+        args = f"run --rm -i -v /var/ipa_dn_wildcard/issued_certs/:/acme.sh/ -e ACMEDNS_UPDATE_URL=http://127.0.0.1:88/update --net=host dockervault.dn.ipantt.net/dockervault-neilpang-acme-sh:20210602_001 --issue --always-force-new-domain-key --insecure --days 30 --dnssleep 1 --debug -d {domainFqdn} -d *.{domainFqdn} {'--test' if testMode else ''} {'--force' if forceMode else ''} --dns dns_acmedns".split(
+        )
+
+        if Str.IsFilled(preferredChain):
+            args.append(f"--preferred-chain")
+            args.append(f"\"{preferredChain}\"")
+
         Docker.RunDockerCommandInteractive(
-            f"run --rm -i -v /var/ipa_dn_wildcard/issued_certs/:/acme.sh/ -e ACMEDNS_UPDATE_URL=http://127.0.0.1:88/update --net=host dockervault.dn.ipantt.net/dockervault-neilpang-acme-sh:20210602_001 --issue --always-force-new-domain-key --insecure --days 30 --dnssleep 1 --debug -d {domainFqdn} -d *.{domainFqdn} {'--test' if testMode else ''} {'--force' if forceMode else ''} --dns dns_acmedns".split(
-            )
+            args
         )
 
         Print("The cert issue process by acme.sh container  OK.")
@@ -225,18 +231,23 @@ if __name__ == '__main__':
                         help="Force mode (Renew cert forcefully regardless the expires date)")
     parser.add_argument("--copyonly", action="store_true",
                         help="Do not renew certificates. Copy only. (for debug)")
+    parser.add_argument("--preferred-chain", dest="preferred_chain",
+                        type=str, help="Specify preferred-chain")
 
     args = parser.parse_args()
     domainFqdn: str = args.domain_fqdn
     testMode: bool = args.test
     forceMode: bool = args.force
     copyonly: bool = args.copyonly
+    preferred_chain: str = args.preferred_chain
 
-    # まず証明書を発行 (更新) する
-    # なお、更新の必要がない場合 (有効期限がまだまだある) は、ここで例外が発生し、これ以降の処理は実施されない
-    if not copyonly:
-        RequestNewCertIssue(domainFqdn, testMode, forceMode)
+    print("preferred_chain = " + preferred_chain)
 
-    # 証明書が正しく発行 (更新) されたら、その内容を確認した上で、nginx に適用する
-    SetupCert(domainFqdn)
+    # # まず証明書を発行 (更新) する
+    # # なお、更新の必要がない場合 (有効期限がまだまだある) は、ここで例外が発生し、これ以降の処理は実施されない
+    # if not copyonly:
+    #     RequestNewCertIssue(domainFqdn, testMode, forceMode, preferred_chain)
+
+    # # 証明書が正しく発行 (更新) されたら、その内容を確認した上で、nginx に適用する
+    # SetupCert(domainFqdn)
    
