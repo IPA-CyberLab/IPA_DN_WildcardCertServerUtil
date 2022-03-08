@@ -85,7 +85,7 @@ def RequestNewCertIssue(domainFqdn: str, testMode: bool, forceMode: bool, prefer
 
         if Str.IsFilled(preferredChain):
             args.append(f"--preferred-chain")
-            args.append(f"\"{preferredChain}\"")
+            args.append(f"{preferredChain}")
 
         Docker.RunDockerCommandInteractive(
             args
@@ -242,13 +242,11 @@ if __name__ == '__main__':
     preferred_chain: str = args.preferred_chain
     preferred_chain = Str.ToStr(preferred_chain)
 
-    print("preferred_chain = " + preferred_chain)
+    # まず証明書を発行 (更新) する
+    # なお、更新の必要がない場合 (有効期限がまだまだある) は、ここで例外が発生し、これ以降の処理は実施されない
+    if not copyonly:
+        RequestNewCertIssue(domainFqdn, testMode, forceMode, preferred_chain)
 
-    # # まず証明書を発行 (更新) する
-    # # なお、更新の必要がない場合 (有効期限がまだまだある) は、ここで例外が発生し、これ以降の処理は実施されない
-    # if not copyonly:
-    #     RequestNewCertIssue(domainFqdn, testMode, forceMode, preferred_chain)
-
-    # # 証明書が正しく発行 (更新) されたら、その内容を確認した上で、nginx に適用する
-    # SetupCert(domainFqdn)
+    # 証明書が正しく発行 (更新) されたら、その内容を確認した上で、nginx に適用する
+    SetupCert(domainFqdn)
    
