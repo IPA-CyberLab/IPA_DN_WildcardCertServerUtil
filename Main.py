@@ -240,6 +240,7 @@ if __name__ == '__main__':
     forceMode: bool = args.force
     copyonly: bool = args.copyonly
     preferred_chain: str = args.preferred_chain
+    preferred_chain = Str.ToStr(preferred_chain)
 
     print("preferred_chain = " + preferred_chain)
 
