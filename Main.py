@@ -153,7 +153,7 @@ def SetupCert(domainFqdn: str):
     listen [::]:443 ssl;
     listen 443 ssl;
     
-    server_name __FQDN__ www.__FQDN__ ssl-cert-server.__FQDN__;
+    server_name __FQDN__ www.__FQDN__ ssl-cert-server.__FQDN__ ssl-cert-server-v4.__FQDN__ ssl-cert-server-v6.__FQDN__;
     
     server_tokens off;
     ssl_certificate /etc/nginx/sites.d/wildcard_cert___FQDN__.cer;
