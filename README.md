@@ -17,10 +17,10 @@
 事前に必要なものは、以下のとおりである。
 - 本プログラムによって運用したいドメイン名 1 個  
   (上記の説明における `example.org` に相当するもの。サブドメインでもよい。)
-- 上記のドメインの DNS 権威サーバーが適切に設定され、本 IPA_DN_WildcardCertServerUtil プログラムを動作させる 1 台の DNS 更新・証明書ファイル提供サーバーを指す A レコードを示す `_acme-challange.example.org` という名前の NS レコードが適切に設定されている状態。これは、以下の 2 つの方法のいずれかによって実現可能である。
+- 上記のドメインの DNS 権威サーバーが適切に設定され、本 IPA_DN_WildcardCertServerUtil プログラムを動作させる 1 台の DNS 更新・証明書ファイル提供サーバーを指す A レコードを示す `_acme-challenge.example.org` という名前の NS レコードが適切に設定されている状態。これは、以下の 2 つの方法のいずれかによって実現可能である。
   - (手法 1) 上記のドメインが IPA_DN_WildCardDnsServer (Go 言語で書かれたステートレスなワイルドカード DNS サーバー, https://github.com/IPA-CyberLab/IPA_DN_WildCardDnsServer/) によってすでに運用されている状態
   (すなわち、IPA_DN_WildCardDnsServer のために 2 台の VM が動作している状態であること)
-  - (手法 2) IPA_DN_WildCardDnsServer を使用せず、通常の DNS サーバー (例: BIND, Microsoft DNS, PowerDNS, NSD, AWS Route 53、その他の各種の DNS サービスプロバイダの DNS サーバー) で DNS ドメインのゾーンを運営している場合は、その DNS 権威サーバーにおいて、本 IPA_DN_WildcardCertServerUtil プログラムを動作させる 1 台の DNS 更新・証明書ファイル提供サーバーを指す A レコードを示す `_acme-challange.example.org` という名前の NS レコードを適切に設定すること。ここで、NS レコードというものは、ホスト名を指定するものであるため、IPv4 アドレスを直接指定することはできない。まず、A レコードとして、たとえば `ssl-cert-server.example.org` というような名前のレコードを定義し、ここに本サーバーの IPv4 アドレスを記載するべきである。次に、NS レコードとして、`_acme-challange.example.org` というレコード名を定義し、これの NS の値として `ssl-cert-server.example.org` というような名前の先ほど定義した A レコードを指定するべきである。
+  - (手法 2) IPA_DN_WildCardDnsServer を使用せず、通常の DNS サーバー (例: BIND, Microsoft DNS, PowerDNS, NSD, AWS Route 53、その他の各種の DNS サービスプロバイダの DNS サーバー) で DNS ドメインのゾーンを運営している場合は、その DNS 権威サーバーにおいて、本 IPA_DN_WildcardCertServerUtil プログラムを動作させる 1 台の DNS 更新・証明書ファイル提供サーバーを指す A レコードを示す `_acme-challenge.example.org` という名前の NS レコードを適切に設定すること。ここで、NS レコードというものは、ホスト名を指定するものであるため、IPv4 アドレスを直接指定することはできない。まず、A レコードとして、たとえば `ssl-cert-server.example.org` というような名前のレコードを定義し、ここに本サーバーの IPv4 アドレスを記載するべきである。次に、NS レコードとして、`_acme-challenge.example.org` というレコード名を定義し、これの NS の値として `ssl-cert-server.example.org` というような名前の先ほど定義した A レコードを指定するべきである。
 - この IPA_DN_WildcardCertServerUtil の Web サーバーのために、1 台の VM が必要である。これは、現代的な Linux が動作する任意のクラウドまたはオンプレミスの VM であって、固定グローバル IPv4 アドレスの割当てがされているものであれば、何でも構わない。
   - Linux のバージョンは、Ubuntu 20.04 または Ubuntu 18.04 を推奨する。それ以外の Linux でもおおむね動作すると思われるが、自己責任で動作させること。
   - この IPA_DN_WildcardCertServerUtil の Web サーバーの VM は、1 台で差し支え無い。なぜならば、この Web サーバーがダウンしたとしても、DNS 名前解決に影響はなく、単に Let's Encrypt の定期的な証明書の更新ができなくなるためである。以下のサンプルでは、Let's Encrypt の証明書更新は、毎日 1 回証明書の残り有効期限をチェックし、証明書の残り有効期限が 60 日未満になる度に更新を要求する。そこで、もしこの Web サーバーが運悪くしばらくの間ダウンしたとしても、そのダウン期間が 60 日未満であれば、その後 Web サーバーを復旧すれば再度その時点で証明書の更新がなされるので、重大な問題は起こらない。
@@ -195,11 +195,11 @@ cfg.DomainExactMatchARecord = "x.y.z.a"
 
 
 ## DNS サーバー側の IP アドレスの設定 (IPA_DN_WildCardDnsServer を使用せず、一般的な DNS サーバーソフトウェアや DNS サービスプロバイダのマネージド DNS ゾーン運用サービスを利用している場合)
-IPA_DN_WildCardDnsServer を使用せず、通常の DNS サーバー (例: BIND, Microsoft DNS, PowerDNS, NSD, AWS Route 53、その他の各種の DNS サービスプロバイダの DNS サーバー) で DNS ドメインのゾーンを運営している場合は、その DNS 権威サーバーにおいて、本 IPA_DN_WildcardCertServerUtil プログラムを動作させる 1 台の DNS 更新・証明書ファイル提供サーバーを指す A レコードを示す `_acme-challange.example.org` という名前の NS レコードを適切に設定すること。
+IPA_DN_WildCardDnsServer を使用せず、通常の DNS サーバー (例: BIND, Microsoft DNS, PowerDNS, NSD, AWS Route 53、その他の各種の DNS サービスプロバイダの DNS サーバー) で DNS ドメインのゾーンを運営している場合は、その DNS 権威サーバーにおいて、本 IPA_DN_WildcardCertServerUtil プログラムを動作させる 1 台の DNS 更新・証明書ファイル提供サーバーを指す A レコードを示す `_acme-challenge.example.org` という名前の NS レコードを適切に設定すること。
 
 - ここで、NS レコードというものは、ホスト名を指定するものであるため、IPv4 アドレスを直接指定することはできない。
 - まず、A レコードとして、たとえば `ssl-cert-server.example.org` という名前のレコードを定義し、ここに本サーバーの IPv4 アドレスを記載するべきである。
-- 次に、NS レコードとして、`_acme-challange.example.org` というレコード名を定義し、これの NS の値として `ssl-cert-server.example.org` というような名前の先ほど定義した A レコードを指定するべきである。
+- 次に、NS レコードとして、`_acme-challenge.example.org` というレコード名を定義し、これの NS の値として `ssl-cert-server.example.org` というような名前の先ほど定義した A レコードを指定するべきである。
 - ここで例として掲げた `ssl-cert-server.example.org` は、簡単のために、同じドメイン名である `.example.org` の配下に作成することを例示したが、実際には、異なるドメイン名の下にその A レコードを作成することでも差し支え無い。
 
 
